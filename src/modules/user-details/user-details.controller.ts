@@ -10,46 +10,55 @@ import {
   HttpException,
   HttpStatus,
   ParseIntPipe,
-  UseGuards,
 } from '@nestjs/common';
-import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { Bcrypt } from 'src/lib/bcrypt';
-import { Roles } from 'src/role/roles.decorator';
-import { Role } from 'src/role/role.enum';
-import { JwtAuthGuard } from 'src/shared/jwt.guard';
-import { RolesGuard } from 'src/role/roles.guard';
+import { UserDetailsService } from './user-details.service';
+import { CreateUserDetailDto } from './dto/create-user-detail.dto';
+import { UpdateUserDetailDto } from './dto/update-user-detail.dto';
+import { UserService } from '../user/user.service';
 
-@Controller('user')
-export class UserController {
+@Controller('user-details')
+export class UserDetailsController {
   constructor(
+    @Inject('IUserDetailsService')
+    private readonly userDetailsService: UserDetailsService,
     @Inject('IUserService')
     private readonly userService: UserService,
   ) {}
 
   @Post('create-typeorm')
-  @Roles(Role.Admin)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  async create(@Body() createUserDto: CreateUserDto) {
+  async create(@Body() createUserDetailDto: CreateUserDetailDto) {
     try {
-      const { meta } = await this.userService.getByLogin(createUserDto.login);
-      if (meta.statusCode === 200) {
+      const user = await this.userDetailsService.getByFullname(
+        createUserDetailDto.fullname,
+      );
+      if (user.meta.statusCode === 200) {
         throw new HttpException(
-          'User with this Login name already exist',
+          'User with this name already exist',
           HttpStatus.BAD_REQUEST,
         );
       }
-      const hashedPassword = await Bcrypt.hash(createUserDto.password);
-      const dto = { ...createUserDto, password: hashedPassword };
-      const resData = await this.userService.create(dto);
+      await this.userService.findOne(createUserDetailDto.userId);
+      const resData = await this.userDetailsService.create(createUserDetailDto);
       return resData;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
+      if (
+        error.code === '23505' ||
+        error.message.includes('duplicate key value violates unique constraint')
+      ) {
+        throw new HttpException(
+          {
+            statusCode: HttpStatus.BAD_REQUEST,
+            message: 'User details already exist for this user.',
+            error: 'Bad Request',
+          },
+          HttpStatus.BAD_REQUEST,
+        );
+      }
       throw new HttpException(
-        'Failed to create User',
+        'Failed to create User Details',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -58,14 +67,14 @@ export class UserController {
   @Get('get-all-typeorm')
   async findAll() {
     try {
-      const resData = await this.userService.findAll();
+      const resData = await this.userDetailsService.findAll();
       return resData;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
       throw new HttpException(
-        'Failed to find Users',
+        'Failed to find Users details',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -74,14 +83,14 @@ export class UserController {
   @Get('get-typeorm/:id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     try {
-      const resData = await this.userService.findOne(id);
+      const resData = await this.userDetailsService.findOne(id);
       return resData;
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
       throw new HttpException(
-        'Failed to find User',
+        'Failed to find User details',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -90,20 +99,23 @@ export class UserController {
   @Patch('update-typeorm/:id')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() updateUserDetailDto: UpdateUserDetailDto,
   ) {
     try {
-      await this.userService.findOne(id);
-      const user = await this.userService.getByLogin(updateUserDto.login);
+      await this.userDetailsService.findOne(id);
+      const user = await this.userDetailsService.getByFullname(
+        updateUserDetailDto.fullname,
+      );
       if (user.meta.statusCode === 200 && user.data.id != id) {
         throw new HttpException(
-          'User with this Login name already exist',
+          'User with this name already exist',
           HttpStatus.BAD_REQUEST,
         );
       }
-      const hashedPassword = await Bcrypt.hash(updateUserDto.password);
-      const dto = { ...updateUserDto, password: hashedPassword };
-      const resData = await this.userService.update(id, dto);
+      const resData = await this.userDetailsService.update(
+        id,
+        updateUserDetailDto,
+      );
       return resData;
     } catch (error) {
       if (error instanceof HttpException) {
@@ -119,8 +131,8 @@ export class UserController {
   @Delete('delete-typeorm/:id')
   async remove(@Param('id', ParseIntPipe) id: number) {
     try {
-      await this.userService.findOne(id);
-      const resData = await this.userService.remove(id);
+      await this.userDetailsService.findOne(id);
+      const resData = await this.userDetailsService.remove(id);
       return resData;
     } catch (error) {
       if (error instanceof HttpException) {

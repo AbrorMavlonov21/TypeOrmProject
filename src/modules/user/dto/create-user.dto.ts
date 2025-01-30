@@ -9,10 +9,6 @@ export class CreateUserDto {
   @IsNotEmpty()
   password: string;
 
-  @IsString()
-  @IsOptional()
-  fullname?: string;
-
   @IsOptional()
   @IsIn(['admin', 'user'], { each: true })
   roles?: string[];

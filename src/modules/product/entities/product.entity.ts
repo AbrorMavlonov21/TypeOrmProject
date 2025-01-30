@@ -1,9 +1,11 @@
 import { CategoryEntity } from 'src/modules/category/entities/category.entity';
+import { UserProduct } from 'src/modules/user-product/entities/user-product.entity';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -20,6 +22,9 @@ export class ProductEntity {
 
   @Column({ type: 'decimal', nullable: false })
   price: number;
+
+  @OneToMany(() => UserProduct, (userProduct) => userProduct.product)
+  userProducts: UserProduct[];
 
   @ManyToOne(() => CategoryEntity, (category) => category.products, {
     onDelete: 'SET NULL',

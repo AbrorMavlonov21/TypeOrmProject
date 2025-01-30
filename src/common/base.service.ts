@@ -1,5 +1,5 @@
 import { BaseRepository } from './base.repository';
-import { ResData } from 'lib/resData';
+import { ResData } from 'src/lib/resData';
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { DeleteResult } from 'typeorm';
 

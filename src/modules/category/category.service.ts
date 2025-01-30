@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { BaseService } from 'common/base.service';
+import { BaseService } from 'src/common/base.service';
 import { CategoryEntity } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryRepository } from './category.repository';
-import { ResData } from 'lib/resData';
+import { ResData } from 'src/lib/resData';
 
 @Injectable()
 export class CategoryService extends BaseService<
