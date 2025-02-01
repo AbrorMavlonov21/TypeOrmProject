@@ -11,6 +11,7 @@ import {
   HttpStatus,
   ParseIntPipe,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,13 +21,14 @@ import { Roles } from 'src/role/roles.decorator';
 import { Role } from 'src/role/role.enum';
 import { JwtAuthGuard } from 'src/shared/jwt.guard';
 import { RolesGuard } from 'src/role/roles.guard';
+import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
 
 @Controller('user')
 export class UserController {
   constructor(
     @Inject('IUserService')
     private readonly userService: UserService,
-  ) {}
+  ) { }
 
   @Post('create-typeorm')
   @Roles(Role.Admin)
@@ -54,10 +56,13 @@ export class UserController {
       );
     }
   }
-
+  @UseInterceptors(CacheInterceptor)
   @Get('get-all-typeorm')
+  @CacheKey('all_users_data')
+  @CacheTTL(60000)
   async findAll() {
     try {
+      console.log('Cache Key: all_users_data');
       const resData = await this.userService.findAll();
       return resData;
     } catch (error) {
@@ -70,8 +75,10 @@ export class UserController {
       );
     }
   }
-
+  @UseInterceptors(CacheInterceptor)
   @Get('get-typeorm/:id')
+  @CacheKey('user_data')
+  @CacheTTL(60)
   async findOne(@Param('id', ParseIntPipe) id: number) {
     try {
       const resData = await this.userService.findOne(id);
