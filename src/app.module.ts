@@ -45,4 +45,4 @@ import { createKeyv } from '@keyv/redis';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

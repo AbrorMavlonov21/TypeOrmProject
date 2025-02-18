@@ -1,6 +1,6 @@
-import { Role } from 'src/role/role.enum';
-import { UserDetail } from 'src/modules/user-details/entities/user-detail.entity';
-import { UserProduct } from 'src/modules/user-product/entities/user-product.entity';
+import { Role } from '../../../role/role.enum';
+import { UserDetail } from '../../../modules/user-details/entities/user-detail.entity';
+import { UserProduct } from '../../../modules/user-product/entities/user-product.entity';
 import {
   Column,
   Entity,

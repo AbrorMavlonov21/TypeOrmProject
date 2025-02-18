@@ -5,7 +5,7 @@ import {
   Column,
   JoinColumn,
 } from 'typeorm';
-import { UserEntity } from 'src/modules/user/entities/user.entity';
+import { UserEntity } from '../../../modules/user/entities/user.entity';
 import { ProductEntity } from 'src/modules/product/entities/product.entity';
 
 @Entity('user_product')
